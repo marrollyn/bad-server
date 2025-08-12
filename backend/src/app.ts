@@ -2,11 +2,11 @@ import { errors } from 'celebrate'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import 'dotenv/config'
-import express, { json, urlencoded } from 'express'
+import express from 'express'
 import mongoose from 'mongoose'
 import path from 'path'
 import rateLimit from 'express-rate-limit'
-import { DB_ADDRESS, ORIGIN_ALLOW } from './config'
+import { DB_ADDRESS } from './config'
 import errorHandler from './middlewares/error-handler'
 import serveStatic from './middlewares/serverStatic'
 import routes from './routes'
@@ -24,22 +24,19 @@ app.use(cookieParser())
 //         // allowedHeaders: ['Content-Type','Authorization','X-CSRF-Token'],
 //     }
 // ))
-app.use(cors({ origin: ORIGIN_ALLOW, credentials: true }));
+app.use(cors({ origin: ['http://localhost', 'http://localhost:5173'], credentials: true }));
 // app.use(express.static(path.join(__dirname, 'public')));
 
 const limiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 40, // значения не критичны, главное — наличие
-  standardHeaders: 'draft-7',
-  legacyHeaders: false,
+  windowMs: 15*60*1000, max: 40
 });
 app.use(limiter);
 
 app.use(serveStatic(path.join(__dirname, 'public')))
 
 // app.use(urlencoded({ extended: true }))
-app.use(json({ limit: '10mb' }))
-app.use(urlencoded({ extended: true, limit: '10mb' }))
+app.use(express.urlencoded({ limit: '1mb', extended: true }));
+app.use(express.json({ limit: '1mb' }));
 
 app.options('*', cors())
 app.disable('x-powered-by');
