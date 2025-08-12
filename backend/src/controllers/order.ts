@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { FilterQuery, Error as MongooseError, Types } from 'mongoose'
+import sanitizeHtml from 'sanitize-html'
 import BadRequestError from '../errors/bad-request-error'
 import NotFoundError from '../errors/not-found-error'
 import Order, { IOrder } from '../models/order'
@@ -27,6 +28,8 @@ export const getOrders = async (
             orderDateTo,
             search,
         } = req.query
+
+        const normlimit = Math.min(Number(limit), 10)
 
         const filters: FilterQuery<Partial<IOrder>> = {}
 
@@ -116,8 +119,8 @@ export const getOrders = async (
 
         aggregatePipeline.push(
             { $sort: sort },
-            { $skip: (Number(page) - 1) * Number(limit) },
-            { $limit: Number(limit) },
+            { $skip: (Number(page) - 1) * normlimit },
+            { $limit: normlimit },
             {
                 $group: {
                     _id: '$_id',
@@ -133,7 +136,7 @@ export const getOrders = async (
 
         const orders = await Order.aggregate(aggregatePipeline)
         const totalOrders = await Order.countDocuments(filters)
-        const totalPages = Math.ceil(totalOrders / Number(limit))
+        const totalPages = Math.ceil(totalOrders / normlimit)
 
         res.status(200).json({
             orders,
@@ -309,13 +312,18 @@ export const createOrder = async (
             return next(new BadRequestError('Неверная сумма заказа'))
         }
 
+        const sanitizedComment = sanitizeHtml(comment, {
+            allowedTags: ['b', 'i', 'em', 'strong'],
+            allowedAttributes: {},
+        });
+
         const newOrder = new Order({
             totalAmount: total,
             products: items,
             payment,
             phone,
             email,
-            comment,
+            comment: sanitizedComment,
             customer: userId,
             deliveryAddress: address,
         })

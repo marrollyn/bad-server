@@ -5,10 +5,8 @@ import 'dotenv/config'
 import express, { json, urlencoded } from 'express'
 import mongoose from 'mongoose'
 import path from 'path'
-import mongoSanitize from 'express-mongo-sanitize'
 import rateLimit from 'express-rate-limit'
-import helmet from 'helmet'
-import { DB_ADDRESS } from './config'
+import { DB_ADDRESS, ORIGIN_ALLOW } from './config'
 import errorHandler from './middlewares/error-handler'
 import serveStatic from './middlewares/serverStatic'
 import routes from './routes'
@@ -18,15 +16,15 @@ const app = express()
 
 app.use(cookieParser())
 
-app.use(cors(
-    {
-        origin: ['http://localhost', 'http://localhost:5173'],
-        credentials: true,
-        // methods: ['GET','POST','PUT','PATCH'],
-        // allowedHeaders: ['Content-Type','Authorization','X-CSRF-Token'],
-    }
-))
-// app.use(cors({ origin: ORIGIN_ALLOW, credentials: true }));
+// app.use(cors(
+//     {
+//         origin: ['http://localhost', 'http://localhost:5173'],
+//         credentials: true,
+//         // methods: ['GET','POST','PUT','PATCH'],
+//         // allowedHeaders: ['Content-Type','Authorization','X-CSRF-Token'],
+//     }
+// ))
+app.use(cors({ origin: ORIGIN_ALLOW, credentials: true }));
 // app.use(express.static(path.join(__dirname, 'public')));
 
 const limiter = rateLimit({
@@ -44,9 +42,7 @@ app.use(json({ limit: '10mb' }))
 app.use(urlencoded({ extended: true, limit: '10mb' }))
 
 app.options('*', cors())
-app.use(helmet({ contentSecurityPolicy: false }));
 app.disable('x-powered-by');
-app.use(mongoSanitize({ replaceWith: '_' }))
 app.use(routes)
 app.use(errors())
 app.use(errorHandler)

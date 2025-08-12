@@ -2,11 +2,18 @@ import { Joi, celebrate } from 'celebrate'
 import { Types } from 'mongoose'
 
 // eslint-disable-next-line no-useless-escape
-export const phoneRegExp = /^(\+\d+)?(?:\s|-?|\(?\d+\)?)+$/
+export const phoneRegExp = /^\+?[1-9]\d{1,14}$/
 
 export enum PaymentType {
     Card = 'card',
     Online = 'online',
+}
+
+export enum StatusType {
+    Cancelled = 'cancelled',
+    Completed = 'completed',
+    New = 'new',
+    Delivering = 'delivering',
 }
 
 // валидация id
@@ -133,3 +140,18 @@ export const validateAuthentication = celebrate({
         }),
     }),
 })
+
+export const validateGetOrders = celebrate({
+  query: Joi.object().keys({
+    page: Joi.number().integer().min(1).default(1),
+    limit: Joi.number().integer().min(1).default(10),
+    sortField: Joi.string().default('createdAt'),
+    sortOrder: Joi.string().default('desc'),
+    status: Joi.string().valid(...Object.values(StatusType)),
+    totalAmountFrom: Joi.number().min(0),
+    totalAmountTo: Joi.number().min(0),
+    orderDateFrom: Joi.date(),
+    orderDateTo: Joi.date(),
+    search: Joi.string().allow(''),
+  }),
+}, { abortEarly: false });
