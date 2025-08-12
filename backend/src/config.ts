@@ -14,8 +14,9 @@ export const REFRESH_TOKEN = {
     cookie: {
         name: 'refreshToken',
         options: {
+            domain: 'localhost',
             httpOnly: true,
-            sameSite: 'lax',
+            sameSite: 'strict',
             secure: false,
             maxAge: ms(process.env.AUTH_REFRESH_TOKEN_EXPIRY || '7d'),
             path: '/',
